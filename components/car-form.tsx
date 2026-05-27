@@ -20,7 +20,6 @@ const CURRENT_YEAR = new Date().getFullYear();
 export function CarForm({ initialData }: CarFormProps) {
   const router = useRouter();
   const isEdit = !!initialData;
-
   const stableId = initialData?.id ?? crypto.randomUUID();
 
   const [form, setForm] = useState<CarInsert>({
@@ -42,16 +41,14 @@ export function CarForm({ initialData }: CarFormProps) {
 
   function validate(): boolean {
     const newErrors: Partial<Record<keyof CarInsert, string>> = {};
-
     if (!form.name.trim()) newErrors.name = "Requerido";
     if (!form.brand.trim()) newErrors.brand = "Requerido";
     if (!form.color.trim()) newErrors.color = "Requerido";
     if (!form.year) {
       newErrors.year = "Requerido";
     } else if (form.year < 1900 || form.year > CURRENT_YEAR + 1) {
-      newErrors.year = `Año debe estar entre 1900 y ${CURRENT_YEAR + 1}`;
+      newErrors.year = `Entre 1900 y ${CURRENT_YEAR + 1}`;
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }
@@ -65,22 +62,14 @@ export function CarForm({ initialData }: CarFormProps) {
 
     try {
       if (isEdit) {
-        const { error } = await supabase
-          .from("cars")
-          .update(form)
-          .eq("id", initialData.id);
-
+        const { error } = await supabase.from("cars").update(form).eq("id", initialData.id);
         if (error) throw error;
         toast.success("Auto actualizado correctamente");
       } else {
-        const { error } = await supabase
-          .from("cars")
-          .insert({ ...form, id: stableId });
-
+        const { error } = await supabase.from("cars").insert({ ...form, id: stableId });
         if (error) throw error;
         toast.success("Auto creado correctamente");
       }
-
       router.push("/admin");
       router.refresh();
     } catch (err) {
@@ -91,82 +80,92 @@ export function CarForm({ initialData }: CarFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="name">Nombre *</Label>
-          <Input
-            id="name"
-            value={form.name}
-            onChange={(e) => set("name", e.target.value)}
-            placeholder="Toyota Corolla GR"
-          />
-          {errors.name && <p className="text-xs text-red-500">{errors.name}</p>}
-        </div>
+    <form onSubmit={handleSubmit} className="space-y-8 max-w-2xl">
+      {/* Section: Info básica */}
+      <div>
+        <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-4">
+          Información del vehículo
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <Field label="Nombre" required error={errors.name}>
+            <Input
+              id="name"
+              value={form.name}
+              onChange={(e) => set("name", e.target.value)}
+              placeholder="Toyota Corolla GR"
+              className="h-10"
+            />
+          </Field>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="brand">Marca *</Label>
-          <Input
-            id="brand"
-            value={form.brand}
-            onChange={(e) => set("brand", e.target.value)}
-            placeholder="Toyota"
-          />
-          {errors.brand && <p className="text-xs text-red-500">{errors.brand}</p>}
-        </div>
+          <Field label="Marca" required error={errors.brand}>
+            <Input
+              id="brand"
+              value={form.brand}
+              onChange={(e) => set("brand", e.target.value)}
+              placeholder="Toyota"
+              className="h-10"
+            />
+          </Field>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="color">Color *</Label>
-          <Input
-            id="color"
-            value={form.color}
-            onChange={(e) => set("color", e.target.value)}
-            placeholder="Rojo"
-          />
-          {errors.color && <p className="text-xs text-red-500">{errors.color}</p>}
-        </div>
+          <Field label="Color" required error={errors.color}>
+            <Input
+              id="color"
+              value={form.color}
+              onChange={(e) => set("color", e.target.value)}
+              placeholder="Rojo"
+              className="h-10"
+            />
+          </Field>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="year">Año *</Label>
-          <Input
-            id="year"
-            type="number"
-            value={form.year}
-            onChange={(e) => set("year", parseInt(e.target.value, 10))}
-            min={1900}
-            max={CURRENT_YEAR + 1}
-          />
-          {errors.year && <p className="text-xs text-red-500">{errors.year}</p>}
-        </div>
+          <Field label="Año" required error={errors.year}>
+            <Input
+              id="year"
+              type="number"
+              value={form.year}
+              onChange={(e) => set("year", parseInt(e.target.value, 10))}
+              min={1900}
+              max={CURRENT_YEAR + 1}
+              className="h-10"
+            />
+          </Field>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="price">Precio (USD)</Label>
-          <Input
-            id="price"
-            type="number"
-            value={form.price ?? ""}
-            onChange={(e) =>
-              set("price", e.target.value ? parseFloat(e.target.value) : null)
-            }
-            placeholder="25000"
-            min={0}
-          />
+          <Field label="Precio (USD)" error={undefined} className="sm:col-span-2 sm:max-w-xs">
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">$</span>
+              <Input
+                id="price"
+                type="number"
+                value={form.price ?? ""}
+                onChange={(e) => set("price", e.target.value ? parseFloat(e.target.value) : null)}
+                placeholder="25000"
+                min={0}
+                className="h-10 pl-7"
+              />
+            </div>
+          </Field>
         </div>
       </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="description">Descripción</Label>
+      {/* Section: Descripción */}
+      <div>
+        <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-4">
+          Descripción
+        </h3>
         <Textarea
           id="description"
           value={form.description ?? ""}
           onChange={(e) => set("description", e.target.value || null)}
-          placeholder="Detalles del vehículo..."
+          placeholder="Detalles del vehículo: equipamiento, kilómetros, estado..."
           rows={4}
+          className="resize-none"
         />
       </div>
 
-      <div className="space-y-1.5">
-        <Label>Imágenes</Label>
+      {/* Section: Imágenes */}
+      <div>
+        <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-4">
+          Imágenes
+        </h3>
         <ImageUpload
           carId={stableId}
           value={form.images}
@@ -174,19 +173,58 @@ export function CarForm({ initialData }: CarFormProps) {
         />
       </div>
 
-      <div className="flex gap-3 pt-2">
-        <Button type="submit" disabled={loading}>
-          {loading ? "Guardando..." : isEdit ? "Actualizar auto" : "Crear auto"}
+      {/* Actions */}
+      <div className="flex items-center gap-3 pt-2 border-t border-slate-100">
+        <Button
+          type="submit"
+          disabled={loading}
+          className="bg-slate-900 hover:bg-slate-800 text-white font-semibold h-10 px-6 rounded-lg"
+        >
+          {loading ? (
+            <span className="flex items-center gap-2">
+              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+              </svg>
+              Guardando...
+            </span>
+          ) : isEdit ? "Guardar cambios" : "Crear auto"}
         </Button>
         <Button
           type="button"
           variant="outline"
           onClick={() => router.push("/admin")}
           disabled={loading}
+          className="h-10 px-6 rounded-lg font-semibold"
         >
           Cancelar
         </Button>
       </div>
     </form>
+  );
+}
+
+function Field({
+  label,
+  required,
+  error,
+  children,
+  className,
+}: {
+  label: string;
+  required?: boolean;
+  error?: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`space-y-1.5 ${className ?? ""}`}>
+      <Label className="text-sm font-semibold text-slate-700">
+        {label}
+        {required && <span className="text-blue-500 ml-0.5">*</span>}
+      </Label>
+      {children}
+      {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
+    </div>
   );
 }
