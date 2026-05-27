@@ -1,36 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AutoDealer Demo
 
-## Getting Started
+App demo de catálogo de autos con Next.js 15, Supabase y shadcn/ui.
 
-First, run the development server:
+## Stack
+
+- **Next.js 15** (App Router, TypeScript, Tailwind CSS v4, Turbopack)
+- **Supabase** (Postgres + Auth + Storage)
+- **@supabase/ssr** para manejo de sesiones con cookies
+- **shadcn/ui** + **lucide-react** + **sonner**
+
+## Setup local
+
+### 1. Clonar e instalar
+
+```bash
+git clone <repo-url>
+cd practica
+npm install
+```
+
+### 2. Variables de entorno
+
+Copia `.env.local.example` a `.env.local` y completa los valores:
+
+```bash
+cp .env.local.example .env.local
+```
+
+| Variable | Dónde obtenerla |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase → Settings → API → Project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase → Settings → API → anon key |
+| `NEXT_PUBLIC_ADMIN_USER_ID` | Supabase → Auth → Users → copia el UUID del usuario admin |
+
+### 3. Supabase (ya configurado)
+
+- Tabla `cars` con RLS habilitada
+- Bucket `car-images` público con políticas de upload configuradas
+- Signups deshabilitados (Settings → Auth → Sign up → desactivar)
+
+### 4. Correr en desarrollo
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abre [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deploy en Vercel
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Conecta el repositorio en [vercel.com](https://vercel.com)
+2. Agrega las variables de entorno en Settings → Environment Variables
+3. Deploy — Vercel detecta Next.js automáticamente
 
-## Learn More
+## Estructura
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+app/
+  page.tsx              # Catálogo público (Server Component)
+  login/page.tsx        # Login admin
+  admin/
+    layout.tsx          # Header admin
+    page.tsx            # Tabla de autos
+    new/page.tsx        # Crear auto
+    edit/[id]/page.tsx  # Editar auto
+  auth/signout/route.ts # Logout handler
+components/
+  car-card.tsx          # Card pública
+  car-form.tsx          # Formulario crear/editar
+  image-upload.tsx      # Upload múltiple a Storage
+  delete-car-button.tsx # Botón eliminar con confirmación
+  logout-button.tsx     # Logout
+lib/supabase/
+  client.ts             # Browser client
+  server.ts             # Server client (cookies)
+  middleware.ts         # updateSession helper
+middleware.ts           # Protege /admin
+types/database.ts       # Tipos Car, CarInsert
+```
